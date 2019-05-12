@@ -1,5 +1,3 @@
-#include <Bounce2.h>
-
 /*
    Copyright (c) 2016 RedBear
 
@@ -21,15 +19,14 @@
 // Create ble instance
 BLE                       ble;
 // Create a timer task
-Ticker                    ticker1s;
+//Ticker                    ticker1s;
 
 //GPIO pwm pins for motor control
-int motor_left = D2;
-int motor_center = D5;
+int motor_left = D5;
+int motor_center = D2;
 int motor_right = D0;
 int button = D4;
 
-Bounce debouncer = Bounce();
 
 // The uuid of service and characteristics
 static const uint8_t service1_uuid[]         = {0x71, 0x3D, 0, 0, 0x50, 0x3E, 0x4C, 0x75, 0xBA, 0x94, 0x31, 0x48, 0xF1, 0x8D, 0x94, 0x1E};
@@ -174,25 +171,6 @@ void gattServerWriteCallBack(const GattWriteCallbackParams *Handler) {
 }
 
 /**
-   @brief  Timer task callback handle
-*/
-void task_handle(void) {
-  static uint16_t value;
-  Serial.println("Task handle ");
-  value++;
-  // if true, saved to attribute, no notification or indication is generated.
-  //ble.updateCharacteristicValue(characteristic3.getValueAttribute().getHandle(), (uint8_t *)&value, 2, true);
-  // if false or ignore, notification or indication is generated if permit.
-  //  ble.updateCharacteristicValue(characteristic3.getValueAttribute().getHandle(), (uint8_t *)&value, 2);
-  // update heart rate
-  //  hrmCounter++;
-  //  if (hrmCounter == 175) { //  100 <= HRM bps <=175
-  //      hrmCounter = 100;
-  //  }
-  //  hrService->updateHeartRate(hrmCounter);
-}
-
-/**
    @brief  Set advertisement
 */
 void setAdvertisement(void) {
@@ -232,13 +210,8 @@ void setAdvertisement(void) {
 void setup() {
   pinMode(motor_left, OUTPUT);
   pinMode(motor_center, OUTPUT);
-  pinMode(motor_right, OUTPUT);
-
-  debouncer.attach(button, INPUT);
-  debouncer.interval(25);
+  pinMode(motor_right, OUTPUT); 
   
-  //  pinMode(button, INPUT_PULLUP);
-
   analogWrite(motor_left, 0);
   analogWrite(motor_center, 0);
   analogWrite(motor_right, 0);
@@ -248,43 +221,43 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Start ");
   pinMode(D13, OUTPUT);
-  // Init timer task
-  //  ticker1s.attach(task_handle, 1);
+  
   // Init ble
   ble.init();
   ble.onConnection(connectionCallBack);
   ble.onDisconnection(disconnectionCallBack);
   ble.onDataWritten(gattServerWriteCallBack);
+  
   // set advertisement
   setAdvertisement();
-  // set adv_type(enum from 0)
-  //    ADV_CONNECTABLE_UNDIRECTED
-  //    ADV_CONNECTABLE_DIRECTED
-  //    ADV_SCANNABLE_UNDIRECTED
-  //    ADV_NON_CONNECTABLE_UNDIRECTED
   ble.setAdvertisingType(GapAdvertisingParams::ADV_CONNECTABLE_UNDIRECTED);
-  // add service
-  //  hrService  = new HeartRateService(ble, hrmCounter, HeartRateService::LOCATION_FINGER);
-  //  deviceInfo = new DeviceInformationService(ble, "ARM", "Model1", "SN1", "hw-rev1", "fw-rev1", "soft-rev1");
+  
   ble.addService(wanderCompassService);
+  
   // set device name
   ble.setDeviceName((const uint8_t *)DEVICE_NAME);
+  
   // set tx power,valid values are -40, -20, -16, -12, -8, -4, 0, 4
   ble.setTxPower(4);
+  
   // set adv_interval, 100ms in multiples of 0.625ms.
   ble.setAdvertisingInterval(160);
+  
   // set adv_timeout, in seconds
   ble.setAdvertisingTimeout(0);
+  
   // ger BLE stack version
   Serial.print("BLE stack verison is : ");
   Serial.println(ble.getVersion());
+  
   // start advertising
   ble.startAdvertising();
   Serial.println("start advertising ");
 
+}
 
-
-
+void loop() {
+  ble.waitForEvent();
 }
 
 void handleWriteCommand(int command) {
@@ -305,10 +278,7 @@ void handleWriteCommand(int command) {
   Serial.println("prendiendo el pin #");
   Serial.println(motor);
 
-
   turnOnMotor(motor);
-
-
 
 }
 
@@ -316,19 +286,4 @@ void turnOnMotor(int motor) {
   analogWrite(motor, 255);
   delay(1000);
   analogWrite(motor, 0);
-}
-
-void loop() {
-  
-  ble.waitForEvent();
-  debouncer.update();
-
-  if(debouncer.rose()){
-    digitalWrite(motor_left,HIGH);
-  }else{
-    digitalWrite(motor_left,LOW);
-  }
-
-
-  //  analogWrite(D5,255);
 }
