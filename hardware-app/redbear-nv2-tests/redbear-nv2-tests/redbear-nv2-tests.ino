@@ -208,14 +208,16 @@ void setAdvertisement(void) {
 }
 
 void setup() {
+  
   pinMode(motor_left, OUTPUT);
   pinMode(motor_center, OUTPUT);
   pinMode(motor_right, OUTPUT); 
   
-  analogWrite(motor_left, 0);
-  analogWrite(motor_center, 0);
-  analogWrite(motor_right, 0);
+  digitalWrite(motor_left, 0);
+  digitalWrite(motor_center, 0);
+  digitalWrite(motor_right, 0);
 
+  disableMotors();
 
   // put your setup code here, to run once
   Serial.begin(9600);
@@ -262,6 +264,7 @@ void loop() {
 
 void handleWriteCommand(int command) {
 
+  
   int motor;
   switch (command) {
     case 0:
@@ -283,7 +286,13 @@ void handleWriteCommand(int command) {
 }
 
 void turnOnMotor(int motor) {
-  analogWrite(motor, 255);
-  delay(1000);
+  analogWrite(motor, 200);
+  delay(100);
   analogWrite(motor, 0);
+}
+
+void disableMotors(){
+  analogWrite(motor_left,0);
+  analogWrite(motor_center,0);
+  analogWrite(motor_right,0);
 }
